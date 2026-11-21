@@ -2,276 +2,288 @@ import os
 import struct
 import zlib
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
-DEST = os.path.join(
-    os.environ.get("MAKEFUN_OUTPUT_DIR", os.path.join(ROOT, "out")),
+W = 1024
+H = 1024
+
+PAPER = (246, 239, 221)
+LINE = (198, 188, 164)
+ACCENT = (163, 32, 26)
+ACCENT_LT = (200, 90, 60)
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+IMGDIR = os.path.join(HERE, "assets")
+OUT = os.path.join(
+    os.environ.get("MAKEFUN_OUTPUT_DIR", os.path.join(HERE, "out")),
     "entry.png",
 )
-ASSETS = os.path.join(ROOT, "assets")
 
-PAGE_W, PAGE_H = 1024, 1024
+LEAD_POS = (258, 174)
+SIDE_COLS = (24, 778)
+SIDE_ROWS = (156, 302)
+BAND_COLS = (24, 270, 516, 762)
+BAND_ROWS = (512, 668)
 
-BG = (246, 239, 221)
-CREAM = (246, 239, 221)
-HAIRLINE = (198, 188, 164)
-RED = (163, 32, 26)
-RED_HI = (200, 90, 60)
+photos = [("illo_summit.png",) + LEAD_POS]
+_side_names = (
+    ("illo_europe.png", "illo_ukraine.png"),
+    ("illo_riyadh.png", "illo_markets.png"),
+)
+for _col, _names in enumerate(_side_names):
+    for _row, _nm in enumerate(_names):
+        photos.append((_nm, SIDE_COLS[_col], SIDE_ROWS[_row]))
+_band_names = (
+    ("illo_trade.png", "illo_tech.png", "illo_jakarta.png", "illo_kyiv.png"),
+    ("illo_lebanon.png", "illo_iran.png", "illo_seoul.png", "illo_sport.png"),
+)
+for _row, _names in enumerate(_band_names):
+    for _col, _nm in enumerate(_names):
+        photos.append((_nm, BAND_COLS[_col], BAND_ROWS[_row]))
 
-PHOTOS = [
-    ('illo_summit.png', 258, 174),
-    ('illo_europe.png', 24, 156),
-    ('illo_ukraine.png', 24, 302),
-    ('illo_riyadh.png', 778, 156),
-    ('illo_markets.png', 778, 302),
-    ('illo_trade.png', 24, 512),
-    ('illo_tech.png', 270, 512),
-    ('illo_jakarta.png', 516, 512),
-    ('illo_kyiv.png', 762, 512),
-    ('illo_lebanon.png', 24, 668),
-    ('illo_iran.png', 270, 668),
-    ('illo_seoul.png', 516, 668),
-    ('illo_sport.png', 762, 668),
+texts = {
+    "t_meta.png": (24, 11),
+    "t_ear_l.png": (24, 30),
+    "t_ear_r.png": (850, 30),
+    "t_masthead.png": (226, 54),
+    "t_tag.png": (209, 129),
+    "t_lead.png": (257, 158),
+    "t_side0.png": (23, 220),
+    "t_side1.png": (23, 366),
+    "t_side2.png": (777, 220),
+    "t_side3.png": (777, 366),
+    "t_band0_0.png": (23, 578),
+    "t_band0_1.png": (269, 578),
+    "t_band0_2.png": (515, 578),
+    "t_band0_3.png": (762, 578),
+    "t_band1_0.png": (24, 734),
+    "t_band1_1.png": (269, 734),
+    "t_band1_2.png": (516, 734),
+    "t_band1_3.png": (761, 734),
+    "t_numband.png": (24, 454),
+    "t_crypto.png": (24, 824),
+    "t_datecheck.png": (24, 914),
+    "t_alsotoday.png": (608, 914),
+    "t_foot.png": (24, 991),
+}
+
+hlines = [
+    (24, 1000, 26, 1, LINE),
+    (24, 1000, 148, 1, ACCENT_LT),
+    (24, 1000, 149, 2, ACCENT),
+    (24, 1000, 450, 1, LINE),
+    (24, 1000, 507, 1, LINE),
+    (24, 1000, 663, 1, LINE),
+    (24, 1000, 818, 1, LINE),
+    (24, 1000, 982, 2, LINE),
 ]
 
-TEXTS = [
-    ('t_meta.png', 24, 11),
-    ('t_ear_l.png', 24, 30),
-    ('t_ear_r.png', 850, 30),
-    ('t_masthead.png', 226, 54),
-    ('t_tag.png', 209, 129),
-    ('t_lead.png', 257, 158),
-    ('t_side0.png', 23, 220),
-    ('t_side1.png', 23, 366),
-    ('t_side2.png', 777, 220),
-    ('t_side3.png', 777, 366),
-    ('t_band0_0.png', 23, 578),
-    ('t_band0_1.png', 269, 578),
-    ('t_band0_2.png', 515, 578),
-    ('t_band0_3.png', 762, 578),
-    ('t_band1_0.png', 24, 734),
-    ('t_band1_1.png', 269, 734),
-    ('t_band1_2.png', 516, 734),
-    ('t_band1_3.png', 761, 734),
-    ('t_numband.png', 24, 454),
-    ('t_crypto.png', 24, 824),
-    ('t_datecheck.png', 24, 914),
-    ('t_alsotoday.png', 608, 914),
-    ('t_foot.png', 24, 991),
+vlines = [
+    (252, 156, 440, LINE),
+    (772, 156, 440, LINE),
+    (266, 512, 658, LINE),
+    (512, 512, 658, LINE),
+    (758, 512, 658, LINE),
+    (266, 668, 814, LINE),
+    (512, 668, 814, LINE),
+    (758, 668, 814, LINE),
 ]
 
-HLINES = [
-    (24, 1000, 26, 1, (198, 188, 164)),
-    (24, 1000, 148, 1, (200, 90, 60)),
-    (24, 1000, 149, 2, (163, 32, 26)),
-    (24, 1000, 450, 1, (198, 188, 164)),
-    (24, 1000, 507, 1, (198, 188, 164)),
-    (24, 1000, 663, 1, (198, 188, 164)),
-    (24, 1000, 818, 1, (198, 188, 164)),
-    (24, 1000, 982, 2, (198, 188, 164)),
-]
-
-VLINES = [
-    (252, 156, 440, (198, 188, 164)),
-    (772, 156, 440, (198, 188, 164)),
-    (266, 512, 658, (198, 188, 164)),
-    (512, 512, 658, (198, 188, 164)),
-    (758, 512, 658, (198, 188, 164)),
-    (266, 668, 814, (198, 188, 164)),
-    (512, 668, 814, (198, 188, 164)),
-    (758, 668, 814, (198, 188, 164)),
-]
-
-OUTLINES = []
+outlines = []
 
 
-def read_png(path):
-    with open(path, "rb") as handle:
-        data = handle.read()
-    if data[:8] != b"\x89PNG\r\n\x1a\n":
+def _paeth(a, b, c):
+    p = a + b - c
+    da = abs(p - a)
+    db = abs(p - b)
+    dc = abs(p - c)
+    if da <= db and da <= dc:
+        return a
+    if db <= dc:
+        return b
+    return c
+
+
+def load_png(path):
+    with open(path, "rb") as fh:
+        blob = fh.read()
+    if blob[:8] != b"\x89PNG\r\n\x1a\n":
         raise ValueError("not a PNG: " + path)
-    pos = 8
-    width = height = None
-    bit_depth = color_type = interlace = None
-    idat = bytearray()
-    while pos < len(data):
-        length = struct.unpack(">I", data[pos:pos + 4])[0]
-        kind = data[pos + 4:pos + 8]
-        chunk = data[pos + 8:pos + 8 + length]
+    off = 8
+    w = h = None
+    depth = ctype = lace = None
+    blocks = bytearray()
+    while off < len(blob):
+        size = struct.unpack_from(">I", blob, off)[0]
+        kind = blob[off + 4:off + 8]
+        part = blob[off + 8:off + 8 + size]
         if kind == b"IHDR":
-            (width, height, bit_depth, color_type, _comp, _filt,
-             interlace) = struct.unpack(">IIBBBBB", chunk)
+            w, h, depth, ctype, _c, _f, lace = struct.unpack(
+                ">IIBBBBB", part)
         elif kind == b"IDAT":
-            idat += chunk
+            blocks += part
         elif kind == b"IEND":
             break
-        pos += 12 + length
-    if bit_depth != 8 or interlace != 0 or color_type not in (0, 2, 6):
+        off += 12 + size
+    if depth != 8 or lace != 0 or ctype not in (0, 2, 6):
         raise ValueError("unsupported PNG: " + path)
-    channels = {0: 1, 2: 3, 6: 4}[color_type]
-    raw = zlib.decompress(bytes(idat))
-    stride = width * channels
-    out = bytearray(width * height * channels)
+    nc = {0: 1, 2: 3, 6: 4}[ctype]
+    raw = zlib.decompress(bytes(blocks))
+    stride = w * nc
+    if nc == 1:
+        out = bytearray(w * h * 3)
+    else:
+        out = bytearray(w * h * nc)
     prev = bytearray(stride)
-    src = 0
-    for y in range(height):
-        filt = raw[src]
-        src += 1
-        line = bytearray(raw[src:src + stride])
-        src += stride
-        if filt == 1:
-            for i in range(channels, stride):
-                line[i] = (line[i] + line[i - channels]) & 255
-        elif filt == 2:
+    pos = 0
+    for y in range(h):
+        f = raw[pos]
+        pos += 1
+        row = bytearray(raw[pos:pos + stride])
+        pos += stride
+        if f == 1:
+            for i in range(nc, stride):
+                row[i] = (row[i] + row[i - nc]) & 255
+        elif f == 2:
             for i in range(stride):
-                line[i] = (line[i] + prev[i]) & 255
-        elif filt == 3:
+                row[i] = (row[i] + prev[i]) & 255
+        elif f == 3:
             for i in range(stride):
-                left = line[i - channels] if i >= channels else 0
-                line[i] = (line[i] + ((left + prev[i]) >> 1)) & 255
-        elif filt == 4:
+                left = row[i - nc] if i >= nc else 0
+                row[i] = (row[i] + ((left + prev[i]) >> 1)) & 255
+        elif f == 4:
             for i in range(stride):
-                a = line[i - channels] if i >= channels else 0
+                a = row[i - nc] if i >= nc else 0
                 b = prev[i]
-                c = prev[i - channels] if i >= channels else 0
-                p = a + b - c
-                pa, pb, pc = abs(p - a), abs(p - b), abs(p - c)
-                if pa <= pb and pa <= pc:
-                    pred = a
-                elif pb <= pc:
-                    pred = b
-                else:
-                    pred = c
-                line[i] = (line[i] + pred) & 255
-        elif filt != 0:
-            raise ValueError("bad PNG filter %d in %s" % (filt, path))
-        prev = line
-        row = y * width * channels
-        if channels == 3:
-            out[row:row + width * 3] = line
-        elif channels == 4:
-            out[row:row + width * 4] = line
+                c = prev[i - nc] if i >= nc else 0
+                row[i] = (row[i] + _paeth(a, b, c)) & 255
+        elif f != 0:
+            raise ValueError("bad PNG filter %d in %s" % (f, path))
+        prev = row
+        if nc == 1:
+            dst = y * w * 3
+            for x in range(w):
+                out[dst + x * 3] = row[x]
+                out[dst + x * 3 + 1] = row[x]
+                out[dst + x * 3 + 2] = row[x]
         else:
-            for x in range(width):
-                o = row + x * 3
-                out[o] = out[o + 1] = out[o + 2] = line[x]
-    return width, height, out, channels
+            dst = y * stride
+            out[dst:dst + stride] = row
+    return w, h, bytes(out), nc == 4
 
 
-def chunk(kind, payload):
-    return (struct.pack(">I", len(payload)) + kind + payload
-            + struct.pack(">I", zlib.crc32(kind + payload) & 0xFFFFFFFF))
+def _chunk(kind, payload):
+    return (
+        struct.pack(">I", len(payload))
+        + kind
+        + payload
+        + struct.pack(">I", zlib.crc32(kind + payload) & 0xFFFFFFFF)
+    )
 
 
-def write_png(path, width, height, rgb):
-    ihdr = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
-    stride = width * 3
-    best = None
-    for filt in (0, 2):
-        body = bytearray()
-        prev = bytes(stride)
-        for y in range(height):
-            line = rgb[y * stride:(y + 1) * stride]
-            body.append(filt)
-            if filt == 0:
-                body += line
-            else:
-                body += bytes((c - p) & 255 for c, p in zip(line, prev))
-            prev = line
-        packed = zlib.compress(bytes(body), 9)
-        if best is None or len(packed) < len(best):
-            best = packed
-    png = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr)
-    png += chunk(b"IDAT", best) + chunk(b"IEND", b"")
-    with open(path, "wb") as handle:
-        handle.write(png)
+def _filtered(rgb, w, h, mode):
+    stride = w * 3
+    buf = bytearray()
+    above = bytes(stride)
+    for y in range(h):
+        cur = rgb[y * stride:(y + 1) * stride]
+        buf.append(mode)
+        if mode == 0:
+            buf += cur
+        else:
+            buf += bytes((v - u) & 255 for v, u in zip(cur, above))
+        above = cur
+    return bytes(buf)
 
 
-def paste(page, img, img_w, img_h, at_x, at_y, channels):
-    if channels == 3:
-        for y in range(img_h):
-            d = ((at_y + y) * PAGE_W + at_x) * 3
-            s = y * img_w * 3
-            page[d:d + img_w * 3] = img[s:s + img_w * 3]
+def save_png(path, w, h, rgb):
+    head = struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0)
+    first = zlib.compress(_filtered(rgb, w, h, 0), 9)
+    second = zlib.compress(_filtered(rgb, w, h, 2), 9)
+    body = first if len(first) <= len(second) else second
+    blob = (
+        b"\x89PNG\r\n\x1a\n"
+        + _chunk(b"IHDR", head)
+        + _chunk(b"IDAT", body)
+        + _chunk(b"IEND", b"")
+    )
+    with open(path, "wb") as fh:
+        fh.write(blob)
+
+
+def blit(page, img, iw, ih, ox, oy, alpha):
+    if not alpha:
+        for y in range(ih):
+            d = ((oy + y) * W + ox) * 3
+            s = y * iw * 3
+            page[d:d + iw * 3] = img[s:s + iw * 3]
         return
-    for y in range(img_h):
-        page_row = (at_y + y) * PAGE_W * 3
-        img_row = y * img_w * 4
-        for x in range(img_w):
-            s = img_row + x * 4
-            alpha = img[s + 3]
-            if alpha == 0:
+    for y in range(ih):
+        prow = (oy + y) * W * 3
+        irow = y * iw * 4
+        for x in range(iw):
+            s = irow + x * 4
+            a = img[s + 3]
+            if a == 0:
                 continue
-            d = page_row + (at_x + x) * 3
-            if alpha == 255:
-                page[d] = img[s]
-                page[d + 1] = img[s + 1]
-                page[d + 2] = img[s + 2]
+            d = prow + (ox + x) * 3
+            if a == 255:
+                page[d:d + 3] = img[s:s + 3]
             else:
-                inv = 255 - alpha
-                page[d] = (img[s] * alpha + page[d] * inv + 127) // 255
-                page[d + 1] = (img[s + 1] * alpha + page[d + 1] * inv + 127) // 255
-                page[d + 2] = (img[s + 2] * alpha + page[d + 2] * inv + 127) // 255
+                inv = 255 - a
+                for k in range(3):
+                    page[d + k] = (img[s + k] * a + page[d + k] * inv + 127) // 255
 
 
-def fill_rect(page, x0, y0, x1, y1, color):
+def paint(page, x0, y0, x1, y1, rgb):
+    r, g, b = rgb
     for y in range(y0, y1 + 1):
-        row = y * PAGE_W * 3
+        base = y * W * 3
         for x in range(x0, x1 + 1):
-            d = row + x * 3
-            page[d] = color[0]
-            page[d + 1] = color[1]
-            page[d + 2] = color[2]
+            o = base + x * 3
+            page[o] = r
+            page[o + 1] = g
+            page[o + 2] = b
 
 
-def outline_rect(page, x0, y0, x1, y1):
+def edge(page, x0, y0, x1, y1):
     inv = 255 - 56
     for x in range(x0, x1 + 1):
         for y in (y0, y1):
-            d = (y * PAGE_W + x) * 3
-            page[d] = (CREAM[0] * 56 + page[d] * inv + 127) // 255
-            page[d + 1] = (CREAM[1] * 56 + page[d + 1] * inv + 127) // 255
-            page[d + 2] = (CREAM[2] * 56 + page[d + 2] * inv + 127) // 255
+            o = (y * W + x) * 3
+            for k in range(3):
+                page[o + k] = (PAPER[k] * 56 + page[o + k] * inv + 127) // 255
     for y in range(y0 + 1, y1):
         for x in (x0, x1):
-            d = (y * PAGE_W + x) * 3
-            page[d] = (CREAM[0] * 56 + page[d] * inv + 127) // 255
-            page[d + 1] = (CREAM[1] * 56 + page[d + 1] * inv + 127) // 255
-            page[d + 2] = (CREAM[2] * 56 + page[d + 2] * inv + 127) // 255
+            o = (y * W + x) * 3
+            for k in range(3):
+                page[o + k] = (PAPER[k] * 56 + page[o + k] * inv + 127) // 255
 
 
-def main():
-    page = bytearray(PAGE_W * PAGE_H * 3)
-    for i in range(0, len(page), 3):
-        page[i] = BG[0]
-        page[i + 1] = BG[1]
-        page[i + 2] = BG[2]
+def place(page, name, x, y):
+    iw, ih, pix, al = load_png(os.path.join(IMGDIR, name))
+    blit(page, pix, iw, ih, x, y, al)
 
-    gw, gh, grain, gch = read_png(os.path.join(ASSETS, "grain_256.png"))
-    for gy in range(0, PAGE_H, gh):
-        for gx in range(0, PAGE_W, gw):
-            paste(page, grain, gw, gh, gx, gy, gch)
 
-    for name, x, y in PHOTOS:
-        w, h, img, ch = read_png(os.path.join(ASSETS, name))
-        paste(page, img, w, h, x, y, ch)
-
-    for x0, x1, y, height, color in HLINES:
-        top = y - (height - 1) // 2
-        fill_rect(page, x0, top, x1, top + height - 1, color)
-    for x, y0, y1, color in VLINES:
-        fill_rect(page, x, y0, x, y1, color)
-
-    for name, x, y in TEXTS:
-        w, h, img, ch = read_png(os.path.join(ASSETS, name))
-        paste(page, img, w, h, x, y, ch)
-
-    for x0, y0, x1, y1 in OUTLINES:
-        outline_rect(page, x0, y0, x1, y1)
-
-    os.makedirs(os.path.dirname(DEST), exist_ok=True)
-    write_png(DEST, PAGE_W, PAGE_H, bytes(page))
-    print("wrote", DEST)
+def build():
+    page = bytearray(bytes(PAPER) * (W * H))
+    gw, gh, grain, gal = load_png(os.path.join(IMGDIR, "grain_256.png"))
+    for ty in range(0, H, gh):
+        for tx in range(0, W, gw):
+            blit(page, grain, gw, gh, tx, ty, gal)
+    for name, x, y in photos:
+        place(page, name, x, y)
+    for x0, x1, y, th, col in hlines:
+        top = y - (th - 1) // 2
+        paint(page, x0, top, x1, top + th - 1, col)
+    for x, y0, y1, col in vlines:
+        paint(page, x, y0, x, y1, col)
+    for name, (x, y) in texts.items():
+        place(page, name, x, y)
+    for x0, y0, x1, y1 in outlines:
+        edge(page, x0, y0, x1, y1)
+    os.makedirs(os.path.dirname(OUT), exist_ok=True)
+    save_png(OUT, W, H, bytes(page))
+    print("wrote", OUT)
 
 
 if __name__ == "__main__":
-    main()
+    build()
